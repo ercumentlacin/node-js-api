@@ -101,13 +101,21 @@ router.patch('/:id', (req, res) => {
 
 router.get('/:id', (req, res) => {
   const { id } = req.params;
-  const user = data.find((user) => user.id === parseInt(id));
-
-  if (user) {
-    res.status(200).json(user);
-  } else {
-    res.status(404).send('Aradığınız kullanıcı bulunamadı ...');
-  }
+  User.findUserById(id)
+    .then((user) => {
+      user !== undefined
+        ? res.status(200).json(user)
+        : res
+            .status(500)
+            .json({
+              errorMessage: 'Belirtilen ID ile bir kullanıcı bulunamadi.',
+            });
+    })
+    .catch((e) => {
+      res
+        .status(404)
+        .json({ errorMessage: 'Kullanıcı yuklenirken hata olustu', error: e });
+    });
 });
 
 module.exports = router;
