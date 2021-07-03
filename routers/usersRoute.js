@@ -7,12 +7,21 @@ router.get('/', (req, res) => {
 
 // yeni kullanıcı oluşturma
 let next_id = 4;
-router.post('/', (req, res) => {
+router.post('/', (req, res, next) => {
   let newUser = req.body;
-  newUser.id = next_id;
-  next_id++;
-  data.push(newUser);
-  res.status(201).json(newUser);
+
+  if (newUser.name) {
+    newUser.id = next_id;
+    next_id++;
+    data.push(newUser);
+    res.status(201).json(newUser);
+  } else {
+    //   error handling
+    next({
+      statusCode: 400,
+      errorMessage: 'Kullanıcı eklemek için isim girmelisiniz ...',
+    });
+  }
 });
 
 // kullanıcı silme
