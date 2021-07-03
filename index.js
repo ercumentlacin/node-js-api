@@ -10,7 +10,7 @@ server.use(logger);
 server.use('/users', usersRouter);
 
 server.get('/', (req, res) => {
-  res.send('Hello Express!');
+  res.status(200).json({ server: 'up' });
 });
 
 // error handlibg
