@@ -1,61 +1,101 @@
 const router = require('express').Router();
 let data = require('../data');
+const User = require('../data/data-model');
 
-router.get('/', (req, res) => {
-  res.status(200).json(data);
+router.get('/', (req, res, next) => {
+  User.findUser()
+    .then((user) => {
+      res.status(200).json(user);
+    })
+    .catch((error) => {
+      next({
+        statusCode: 500,
+        errorMessage: 'Kullanıcılar alınırken hata oluştu.',
+        error,
+      });
+    });
 });
 
 // yeni kullanıcı oluşturma
-let next_id = 4;
 router.post('/', (req, res, next) => {
-  let newUser = req.body;
+  const newUser = req.body;
 
-  if (newUser.name) {
-    newUser.id = next_id;
-    next_id++;
-    data.push(newUser);
-    res.status(201).json(newUser);
-  } else {
-    //   error handling
+  if (!newUser.name) {
     next({
       statusCode: 400,
       errorMessage: 'Kullanıcı eklemek için isim girmelisiniz ...',
     });
+  } else {
+    User.addUser(newUser)
+      .then((added) => {
+        res.status(201).json(added);
+      })
+      .catch((error) => {
+        next({
+          statusCode: 500,
+          errorMessage: 'Kullanıcı eklenirken bir hata oluştu ...',
+          error,
+        });
+      });
   }
 });
 
 // kullanıcı silme
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
-  const deleteUser = data.find((user) => user.id === parseInt(id));
-  data = data.filter((user) => user.id !== parseInt(id));
 
-  if (deleteUser) {
-    res.send(data);
-    res.status(204).end();
-  } else {
-    res
-      .status(404)
-      .json({ errorMessage: 'Silmeye çalıştığınız kullanıcı sistemde yok !' });
-  }
+  User.findUserById(id)
+    .then((deletedUser) => {
+      User.deleteUser(id)
+        .then((deleted) => {
+          if (deleted) {
+            res.status(204).end();
+          }
+          next({
+            statusCode: 400,
+            errorMessage:
+              'Silmeye calistiginiz kullanıcı sistemde mevcut degil.',
+          });
+        })
+        .catch((error) => {
+          next({
+            statusCode: 500,
+            errorMessage: 'Kullanıcı silinirken hata olustu.',
+            error,
+          });
+        });
+    })
+    .catch((error) => {
+      next({
+        statusCode: 500,
+        errorMessage: 'Kullanıcı bulunurken hata olustu.',
+        error,
+      });
+    });
 });
 
 // kullanıcı edit
 router.patch('/:id', (req, res) => {
   const { id } = req.params;
-  const body = req.body;
-  let thisUser = data.find((user) => user.id === parseInt(id));
+  const updatedUser = req.body;
 
-  if (thisUser) {
-    data = data.filter((user) => user.id !== parseInt(id));
-    thisUser = { ...thisUser, ...body };
-    data = [...data, thisUser];
-    res.send(data);
-    res.status(200).end();
+  if (!updatedUser.name) {
+    next({
+      statusCode: 400,
+      errorMessage: 'Kullanıcı ismi boş bırakılamaz',
+    });
   } else {
-    res
-      .status(404)
-      .json({ errorMessage: 'Silmeye çalıştığınız kullanıcı sistemde yok !' });
+    User.updateUser(updatedUser, id)
+      .then((updated) => {
+        res.status(200).json(updated);
+      })
+      .catch((error) => {
+        next({
+          statusCode: 500,
+          errorMessage: 'Kullanıcı düzenlenirken hata oluştu ...',
+          error,
+        });
+      });
   }
 });
 

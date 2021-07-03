@@ -3,12 +3,12 @@ exports.up = function (knex) {
     .createTable('user', (table) => {
       table.increments();
       table.string('name').notNullable();
-      table.timestamps();
+      table.timestamp('created_at').defaultTo(knex.fn.now());
     })
     .createTable('club', (table) => {
       table.increments();
       table.string('name').notNullable();
-      table.timestamps();
+      table.timestamp('created_at').defaultTo(knex.fn.now());
     })
     .createTable('user_club', (table) => {
       table.increments();
@@ -24,7 +24,7 @@ exports.up = function (knex) {
         .references('club.id')
         .onUpdate('CASCADE')
         .onDelete('CASCADE');
-      table.timestamps();
+      table.timestamp('created_at').defaultTo(knex.fn.now());
     });
 };
 
